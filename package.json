@@ -1,0 +1,23 @@
+{
+  "name": "ebanx-take-home-assignment",
+  "version": "1.0.0",
+  "description": "Ebanx Take-home Assignment",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "tsx watch src/server.ts",
+    "start": "node build/server.js",
+    "build": "tsup src --out-dir build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "20.14.9",
+    "tsup": "8.1.0",
+    "tsx": "4.15.7",
+    "typescript": "5.5.2"
+  },
+  "dependencies": {
+    "fastify": "4.28.0"
+  }
+}
