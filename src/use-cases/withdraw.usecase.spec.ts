@@ -37,7 +37,7 @@ describe('WithdrawUseCase', () => {
       balance: 50,
     })
 
-    const response = await withdrawUseCase.execute({ accountId, amount })
+    const response = await withdrawUseCase.execute({ origin: accountId, amount })
 
     expect(response).toEqual({
       origin: {
@@ -64,7 +64,7 @@ describe('WithdrawUseCase', () => {
 
     mockAccountsRepository.findByAccountId.mockResolvedValue(null)
 
-    await expect(withdrawUseCase.execute({ accountId, amount })).rejects.toThrow(AccountNotFoundError)
+    await expect(withdrawUseCase.execute({ origin: accountId, amount })).rejects.toThrow(AccountNotFoundError)
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(accountId)
   })
 
@@ -75,7 +75,7 @@ describe('WithdrawUseCase', () => {
 
     mockAccountsRepository.findByAccountId.mockResolvedValue(existingAccount)
 
-    await expect(withdrawUseCase.execute({ accountId, amount })).rejects.toThrow(
+    await expect(withdrawUseCase.execute({ origin: accountId, amount })).rejects.toThrow(
       AccountBalanceLessThanWithdrawAmountError
     )
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(accountId)

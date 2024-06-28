@@ -4,7 +4,7 @@ import { AccountBalanceLessThanWithdrawAmountError } from '@/use-cases/errors/Ac
 import { AccountNotFoundError } from '@/use-cases/errors/AccountNotFoundError'
 
 interface WithdrawUseCaseRequest {
-  accountId: string
+  origin: string
   amount: number
 }
 
@@ -22,7 +22,7 @@ export class WithdrawUseCase {
   ) {}
 
   async execute(request: WithdrawUseCaseRequest): Promise<WithdrawUseCaseResponse> {
-    const { accountId, amount } = request
+    const { origin: accountId, amount } = request
 
     const account = await this.accountsRepository.findByAccountId(accountId)
 

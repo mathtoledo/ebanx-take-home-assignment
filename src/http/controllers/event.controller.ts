@@ -1,6 +1,9 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { makeDepositUseCase } from '@/use-cases/factories/makeDepositUseCase'
+import { makeWithdrawUseCase } from '@/use-cases/factories/makeWithdrawUseCase'
+import { AccountNotFoundError } from '@/use-cases/errors/AccountNotFoundError'
+import { AccountBalanceLessThanWithdrawAmountError } from '@/use-cases/errors/AccountBalanceLessThanWithdrawAmountError'
 
 export async function handleEvent(request: FastifyRequest, reply: FastifyReply) {
   // Schema base para eventos
@@ -40,8 +43,18 @@ export async function handleEvent(request: FastifyRequest, reply: FastifyReply) 
       const depositUseCase = makeDepositUseCase()
       return await depositUseCase.execute(data)
     case 'withdraw':
-      console.log('Executing withdraw use case with data:', data)
-      break
+      try {
+        const withdrawUseCase = makeWithdrawUseCase()
+        return await withdrawUseCase.execute(data)
+      } catch (error) {
+        if (error instanceof AccountNotFoundError) {
+          return reply.status(404).send(0)
+        }
+        if (error instanceof AccountBalanceLessThanWithdrawAmountError) {
+          return reply.status(409).send({ message: error.message })
+        }
+        throw error
+      }
     case 'transfer':
       console.log('Executing transfer use case with data:', data)
       break
