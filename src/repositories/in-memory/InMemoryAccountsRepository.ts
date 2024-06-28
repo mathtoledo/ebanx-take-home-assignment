@@ -2,8 +2,9 @@ import { v7 as uuidV7 } from 'uuid'
 import { AccountsRepository, CreateAccountInput } from '../AccountsRepository'
 import { Account } from '@/entities/Account'
 
+const accounts: Account[] = []
 export class InMemoryAccountsRepository implements AccountsRepository {
-  constructor(private accounts: Account[]) {}
+  constructor(/* private accounts: Account[] */) {}
 
   create({ destination, amount }: CreateAccountInput): Promise<Account> {
     const data: Account = {
@@ -12,13 +13,13 @@ export class InMemoryAccountsRepository implements AccountsRepository {
       balance: amount,
     }
 
-    this.accounts.push(data)
+    accounts.push(data)
 
     return Promise.resolve(data)
   }
 
   findByAccountId(accountId: string): Promise<Account | null> {
-    const account = this.accounts.find((a) => a.accountId === accountId)
+    const account = accounts.find((a) => a.accountId === accountId)
 
     if (!account) {
       return Promise.resolve(null)
@@ -28,14 +29,14 @@ export class InMemoryAccountsRepository implements AccountsRepository {
   }
 
   save(id: string, data: Partial<Account>): Promise<Account> {
-    const accountIndex = this.accounts.findIndex((a) => a.id === id)
+    const accountIndex = accounts.findIndex((a) => a.id === id)
 
     if (accountIndex === -1) {
       throw new Error('Account not found')
     }
 
-    this.accounts[accountIndex] = { ...this.accounts[accountIndex], ...data }
+    accounts[accountIndex] = { ...accounts[accountIndex], ...data }
 
-    return Promise.resolve(this.accounts[accountIndex])
+    return Promise.resolve(accounts[accountIndex])
   }
 }

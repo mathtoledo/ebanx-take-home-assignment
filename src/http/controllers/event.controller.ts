@@ -1,11 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { InMemoryAccountsRepository } from '../../repositories/in-memory/InMemoryAccountsRepository'
-import { InMemoryTransactionsRepository } from '../../repositories/in-memory/InMemoryTransactionsRepository'
-import { DepositUseCase } from '../../use-cases/Deposit.usecase'
-import { Account } from '../../entities/Account'
+import { makeDepositUseCase } from '@/use-cases/factories/makeDepositUseCase'
 
-const accounts: Account[] = []
 export async function handleEvent(request: FastifyRequest, reply: FastifyReply) {
   // Schema base para eventos
   const baseEventSchema = z.object({
@@ -39,12 +35,9 @@ export async function handleEvent(request: FastifyRequest, reply: FastifyReply) 
 
   const data = eventSchema.parse(request.body)
 
-  const accountsRepository = new InMemoryAccountsRepository(accounts)
-  const transactionsRepository = new InMemoryTransactionsRepository()
-
   switch (data.type) {
     case 'deposit':
-      const depositUseCase = new DepositUseCase(accountsRepository, transactionsRepository)
+      const depositUseCase = makeDepositUseCase()
       return await depositUseCase.execute(data)
     case 'withdraw':
       console.log('Executing withdraw use case with data:', data)
