@@ -1,6 +1,6 @@
 import { v7 as uuidV7 } from 'uuid'
 import { AccountsRepository, CreateAccountInput } from '../AccountsRepository'
-import { Account } from '../../entities/Account'
+import { Account } from '@/entities/Account'
 
 export class InMemoryAccountsRepository implements AccountsRepository {
   constructor(private accounts: Account[]) {}

@@ -1,5 +1,5 @@
-import { AccountsRepository } from '../repositories/AccountsRepository'
-import { TransactionsRepository } from '../repositories/TransactionsRepository'
+import { AccountsRepository } from '@/repositories/AccountsRepository'
+import { TransactionsRepository } from '@/repositories/TransactionsRepository'
 
 interface DepositUseCaseRequest {
   destination: string

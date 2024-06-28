@@ -1,4 +1,4 @@
-import { Transaction } from '../../entities/Transaction'
+import { Transaction } from '@/entities/Transaction'
 import { CreateTransactionInput, TransactionsRepository } from '../TransactionsRepository'
 import { v7 as uuidV7 } from 'uuid'
 
