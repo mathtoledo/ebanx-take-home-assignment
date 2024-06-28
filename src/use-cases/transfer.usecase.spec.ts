@@ -5,9 +5,18 @@ import { TransactionsRepository } from '@/repositories/TransactionsRepository'
 import { AccountNotFoundError } from '@/use-cases/errors/AccountNotFoundError'
 import { AccountBalanceLessThanTransferAmountError } from '@/use-cases/errors/AccountBalanceLessThanTransferAmountError'
 
+interface MockAccountsRepository {
+  findByAccountId: ReturnType<typeof vi.fn>
+  save: ReturnType<typeof vi.fn>
+}
+
+interface MockTransactionsRepository {
+  create: ReturnType<typeof vi.fn>
+}
+
 describe('TransferUseCase', () => {
-  let mockAccountsRepository: any
-  let mockTransactionsRepository: any
+  let mockAccountsRepository: MockAccountsRepository
+  let mockTransactionsRepository: MockTransactionsRepository
   let transferUseCase: TransferUseCase
 
   beforeEach(() => {
