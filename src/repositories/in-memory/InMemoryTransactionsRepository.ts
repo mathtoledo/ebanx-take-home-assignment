@@ -2,9 +2,9 @@ import { Transaction } from '@/entities/Transaction'
 import { CreateTransactionInput, TransactionsRepository } from '../TransactionsRepository'
 import { v7 as uuidV7 } from 'uuid'
 
-export class InMemoryTransactionsRepository implements TransactionsRepository {
-  public transactions: Transaction[] = []
+let transactions: Transaction[] = []
 
+export class InMemoryTransactionsRepository implements TransactionsRepository {
   create({ type, origin, destination, amount }: CreateTransactionInput): Promise<Transaction> {
     const data: Transaction = {
       id: uuidV7(),
@@ -15,8 +15,12 @@ export class InMemoryTransactionsRepository implements TransactionsRepository {
       createdAt: new Date(),
     }
 
-    this.transactions.push(data)
+    transactions.push(data)
 
     return Promise.resolve(data)
+  }
+
+  async deleteAll(): Promise<void> {
+    transactions = []
   }
 }

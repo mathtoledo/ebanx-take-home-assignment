@@ -2,9 +2,9 @@ import { v7 as uuidV7 } from 'uuid'
 import { AccountsRepository, CreateAccountInput } from '../AccountsRepository'
 import { Account } from '@/entities/Account'
 
-const accounts: Account[] = []
+let accounts: Account[] = []
 export class InMemoryAccountsRepository implements AccountsRepository {
-  constructor(/* private accounts: Account[] */) {}
+  constructor() {}
 
   create({ destination, amount }: CreateAccountInput): Promise<Account> {
     const data: Account = {
@@ -38,5 +38,9 @@ export class InMemoryAccountsRepository implements AccountsRepository {
     accounts[accountIndex] = { ...accounts[accountIndex], ...data }
 
     return Promise.resolve(accounts[accountIndex])
+  }
+
+  async deleteAll(): Promise<void> {
+    accounts = []
   }
 }

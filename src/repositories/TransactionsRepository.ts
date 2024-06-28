@@ -9,4 +9,6 @@ export type CreateTransactionInput = {
 
 export abstract class TransactionsRepository {
   abstract create({ type, destination, amount }: CreateTransactionInput): Promise<Transaction>
+
+  abstract deleteAll(): Promise<void>
 }

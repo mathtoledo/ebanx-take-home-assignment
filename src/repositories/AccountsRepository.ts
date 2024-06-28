@@ -11,4 +11,6 @@ export abstract class AccountsRepository {
   abstract findByAccountId(accountId: string): Promise<Account | null>
 
   abstract save(id: string, data: Partial<Account>): Promise<Account>
+
+  abstract deleteAll(): Promise<void>
 }
