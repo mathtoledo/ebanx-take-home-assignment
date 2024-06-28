@@ -1,4 +1,3 @@
-// BalanceUseCase.spec.ts
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { BalanceUseCase } from '@/use-cases/Balance.usecase'
 import { AccountsRepository } from '@/repositories/AccountsRepository'
