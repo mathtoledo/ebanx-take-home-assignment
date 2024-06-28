@@ -4,6 +4,8 @@ import { makeDepositUseCase } from '@/use-cases/factories/makeDepositUseCase'
 import { makeWithdrawUseCase } from '@/use-cases/factories/makeWithdrawUseCase'
 import { AccountNotFoundError } from '@/use-cases/errors/AccountNotFoundError'
 import { AccountBalanceLessThanWithdrawAmountError } from '@/use-cases/errors/AccountBalanceLessThanWithdrawAmountError'
+import { makeTransferUseCase } from '@/use-cases/factories/makeTransferUseCase'
+import { AccountBalanceLessThanTransferAmountError } from '@/use-cases/errors/AccountBalanceLessThanTransferAmountError'
 
 export async function handleEvent(request: FastifyRequest, reply: FastifyReply) {
   // Schema base para eventos
@@ -56,11 +58,19 @@ export async function handleEvent(request: FastifyRequest, reply: FastifyReply) 
         throw error
       }
     case 'transfer':
-      console.log('Executing transfer use case with data:', data)
-      break
+      try {
+        const transferUseCase = makeTransferUseCase()
+        return await transferUseCase.execute(data)
+      } catch (error) {
+        if (error instanceof AccountNotFoundError) {
+          return reply.status(404).send(0)
+        }
+        if (error instanceof AccountBalanceLessThanTransferAmountError) {
+          return reply.status(409).send({ message: error.message })
+        }
+        throw error
+      }
     default:
       throw new Error('Invalid event type')
   }
-
-  return reply.status(201).send({ data })
 }
