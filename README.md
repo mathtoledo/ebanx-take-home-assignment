@@ -6,7 +6,7 @@ Ebanx Take-home Assignment
 
 - [ ] Deve ser possível resetar o estado da aplicação
 - [x] Deve ser possível criar uma conta com saldo inicial
-- [ ] Deve ser possível consultar o saldo de uma conta
+- [x] Deve ser possível consultar o saldo de uma conta
 - [x] Deve ser possível efetuar depósito em uma conta
 - [ ] Deve ser possível efetuar o saque de uma conta
 - [ ] Deve ser possível efetuar transferência entre contas
@@ -14,7 +14,7 @@ Ebanx Take-home Assignment
 ### RNs (Regras de negócio)
 
 - [ ] Não deve ser possível criar contas com mesmo identificador (accountId).
-- [ ] A API deve retornar um status 404 e saldo 0 ao tentar consultar o saldo de uma conta que não existe.
+- [x] A API deve retornar um status 404 e saldo 0 ao tentar consultar o saldo de uma conta que não existe.
 - [ ] A API deve retornar um status 404 e saldo 0 ao tentar realizar um saque de uma conta que não existe.
 - [ ] A API deve retornar um status 404 e saldo 0 ao tentar realizar uma transferência de uma conta que não existe.
 - [ ] Não deve ser possível realizar um saque de valor maior que o disponível em saldo.
