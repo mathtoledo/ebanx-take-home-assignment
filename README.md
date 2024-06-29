@@ -4,7 +4,7 @@ Ebanx Take-home Assignment
 
 ### RFs (Requisitos funcionais)
 
-- [ ] Deve ser possível resetar o estado da aplicação
+- [x] Deve ser possível resetar o estado da aplicação
 - [x] Deve ser possível criar uma conta com saldo inicial
 - [x] Deve ser possível consultar o saldo de uma conta
 - [x] Deve ser possível efetuar depósito em uma conta
