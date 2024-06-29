@@ -6,5 +6,5 @@ export async function handleReset(_: FastifyRequest, reply: FastifyReply) {
 
   await resetUseCase.execute()
 
-  return reply.status(200).send()
+  return reply.status(200).send('OK')
 }
