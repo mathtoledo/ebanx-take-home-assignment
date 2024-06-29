@@ -43,11 +43,13 @@ export async function handleEvent(request: FastifyRequest, reply: FastifyReply) 
   switch (data.type) {
     case 'deposit':
       const depositUseCase = makeDepositUseCase()
-      return await depositUseCase.execute(data)
+      const response = await depositUseCase.execute(data)
+      return reply.status(201).send(response)
     case 'withdraw':
       try {
         const withdrawUseCase = makeWithdrawUseCase()
-        return await withdrawUseCase.execute(data)
+        const response = await withdrawUseCase.execute(data)
+        return reply.status(201).send(response)
       } catch (error) {
         if (error instanceof AccountNotFoundError) {
           return reply.status(404).send(0)
@@ -60,7 +62,8 @@ export async function handleEvent(request: FastifyRequest, reply: FastifyReply) 
     case 'transfer':
       try {
         const transferUseCase = makeTransferUseCase()
-        return await transferUseCase.execute(data)
+        const response = await transferUseCase.execute(data)
+        return reply.status(201).send(response)
       } catch (error) {
         if (error instanceof AccountNotFoundError) {
           return reply.status(404).send(0)

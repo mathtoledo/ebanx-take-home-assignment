@@ -42,7 +42,7 @@ export class TransferUseCase {
     }
 
     if (originAccount.balance < amount) {
-      throw new AccountBalanceLessThanTransferAmountError(originAccount.balance, amount)
+      throw new AccountBalanceLessThanTransferAmountError()
     }
 
     await this.transactionsRepository.create({

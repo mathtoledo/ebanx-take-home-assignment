@@ -31,7 +31,7 @@ export class WithdrawUseCase {
     }
 
     if (account.balance < amount) {
-      throw new AccountBalanceLessThanWithdrawAmountError(account.balance, amount)
+      throw new AccountBalanceLessThanWithdrawAmountError()
     }
 
     const balance = account.balance - amount
