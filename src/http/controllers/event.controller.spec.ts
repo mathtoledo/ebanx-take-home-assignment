@@ -124,7 +124,7 @@ describe('Event (e2e)', () => {
     expect(response.body).toEqual(0)
   })
 
-  it('should not be able to transfer if the destination account does not exist', async () => {
+  it('should be able to transfer if the destination account does not exist', async () => {
     await request(app.server).post('/event').send({
       type: 'deposit',
       destination: '105',
@@ -134,12 +134,21 @@ describe('Event (e2e)', () => {
     const response = await request(app.server).post('/event').send({
       type: 'transfer',
       origin: '105',
-      destination: 'non-existent-destination',
+      destination: 'new-destination-id',
       amount: 50,
     })
 
-    expect(response.status).toEqual(404)
-    expect(response.body).toEqual(0)
+    expect(response.status).toEqual(201)
+    expect(response.body).toEqual({
+      origin: {
+        id: '105',
+        balance: 50,
+      },
+      destination: {
+        id: 'new-destination-id',
+        balance: 50,
+      },
+    })
   })
 
   it('should not be able to transfer if the origin account balance is insufficient', async () => {

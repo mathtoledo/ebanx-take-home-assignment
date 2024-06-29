@@ -38,7 +38,10 @@ export class TransferUseCase {
     let destinationAccount = await this.accountsRepository.findByAccountId(destinationAccountId)
 
     if (!destinationAccount) {
-      throw new AccountNotFoundError()
+      destinationAccount = await this.accountsRepository.create({
+        destination: destinationAccountId,
+        amount: 0,
+      })
     }
 
     if (originAccount.balance < amount) {

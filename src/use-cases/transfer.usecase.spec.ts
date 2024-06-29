@@ -6,6 +6,7 @@ import { AccountNotFoundError } from '@/use-cases/errors/AccountNotFoundError'
 import { AccountBalanceLessThanTransferAmountError } from '@/use-cases/errors/AccountBalanceLessThanTransferAmountError'
 
 interface MockAccountsRepository {
+  create: ReturnType<typeof vi.fn>
   findByAccountId: ReturnType<typeof vi.fn>
   save: ReturnType<typeof vi.fn>
 }
@@ -21,6 +22,7 @@ describe('TransferUseCase', () => {
 
   beforeEach(() => {
     mockAccountsRepository = {
+      create: vi.fn(),
       findByAccountId: vi.fn(),
       save: vi.fn(),
     }
@@ -39,20 +41,26 @@ describe('TransferUseCase', () => {
     vi.resetAllMocks()
   })
 
-  it('should successfully transfer between two existing accounts with sufficient balance', async () => {
+  it('should transfer successfully between existing accounts', async () => {
     const originAccountId = 'origin-account-id'
     const destinationAccountId = 'destination-account-id'
     const amount = 50
-    const originAccount = { id: originAccountId, accountId: originAccountId, balance: 100 }
-    const destinationAccount = { id: destinationAccountId, accountId: destinationAccountId, balance: 50 }
+
+    const originAccount = { id: '1', accountId: originAccountId, balance: 100 }
+    const destinationAccount = { id: '2', accountId: destinationAccountId, balance: 0 }
 
     mockAccountsRepository.findByAccountId
       .mockResolvedValueOnce(originAccount)
       .mockResolvedValueOnce(destinationAccount)
-    mockTransactionsRepository.create.mockResolvedValue({})
-    mockAccountsRepository.save
-      .mockResolvedValueOnce({ ...originAccount, balance: 50 })
-      .mockResolvedValueOnce({ ...destinationAccount, balance: 100 })
+
+    mockAccountsRepository.save.mockResolvedValueOnce({
+      ...originAccount,
+      balance: originAccount.balance - amount,
+    })
+    mockAccountsRepository.save.mockResolvedValueOnce({
+      ...destinationAccount,
+      balance: destinationAccount.balance + amount,
+    })
 
     const response = await transferUseCase.execute({
       origin: originAccountId,
@@ -62,79 +70,106 @@ describe('TransferUseCase', () => {
 
     expect(response).toEqual({
       origin: {
-        id: originAccountId,
-        balance: 50,
+        id: originAccount.accountId,
+        balance: originAccount.balance - amount,
       },
       destination: {
-        id: destinationAccountId,
-        balance: 100,
+        id: destinationAccount.accountId,
+        balance: destinationAccount.balance + amount,
       },
     })
+
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(originAccountId)
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(destinationAccountId)
-    expect(mockTransactionsRepository.create).toHaveBeenCalledWith({
-      type: 'transfer',
-      origin: originAccountId,
-      destination: destinationAccountId,
-      amount,
-    })
-    expect(mockAccountsRepository.save).toHaveBeenCalledWith(originAccount.id, {
-      ...originAccount,
-      balance: 50,
-    })
-    expect(mockAccountsRepository.save).toHaveBeenCalledWith(destinationAccount.id, {
-      ...destinationAccount,
-      balance: 100,
-    })
+    expect(mockAccountsRepository.save).toHaveBeenCalledTimes(2)
   })
 
-  it('should throw AccountNotFoundError if the origin account does not exist', async () => {
-    const originAccountId = 'non-existent-origin-account-id'
+  it('should create destination account and transfer when destination account does not exist', async () => {
+    const originAccountId = 'origin-account-id'
     const destinationAccountId = 'destination-account-id'
     const amount = 50
 
-    mockAccountsRepository.findByAccountId
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({ id: destinationAccountId, accountId: destinationAccountId, balance: 100 })
+    const originAccount = { id: '1', accountId: originAccountId, balance: 100 }
+    const createdDestinationAccount = { id: '2', accountId: destinationAccountId, balance: 0 }
 
-    await expect(
-      transferUseCase.execute({ origin: originAccountId, amount, destination: destinationAccountId })
-    ).rejects.toThrow(AccountNotFoundError)
-    expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(originAccountId)
-    expect(mockAccountsRepository.findByAccountId).not.toHaveBeenCalledWith(destinationAccountId)
-  })
+    mockAccountsRepository.findByAccountId.mockResolvedValueOnce(originAccount).mockResolvedValueOnce(null)
 
-  it('should throw AccountNotFoundError if the destination account does not exist', async () => {
-    const originAccountId = 'origin-account-id'
-    const destinationAccountId = 'non-existent-destination-account-id'
-    const amount = 50
+    mockAccountsRepository.create.mockResolvedValueOnce(createdDestinationAccount)
+    mockAccountsRepository.save.mockResolvedValueOnce({
+      ...originAccount,
+      balance: originAccount.balance - amount,
+    })
+    mockAccountsRepository.save.mockResolvedValueOnce({
+      ...createdDestinationAccount,
+      balance: createdDestinationAccount.balance + amount,
+    })
 
-    mockAccountsRepository.findByAccountId
-      .mockResolvedValueOnce({ id: originAccountId, accountId: originAccountId, balance: 100 })
-      .mockResolvedValueOnce(null)
+    const response = await transferUseCase.execute({
+      origin: originAccountId,
+      amount,
+      destination: destinationAccountId,
+    })
 
-    await expect(
-      transferUseCase.execute({ origin: originAccountId, amount, destination: destinationAccountId })
-    ).rejects.toThrow(AccountNotFoundError)
+    expect(response).toEqual({
+      origin: {
+        id: originAccount.accountId,
+        balance: originAccount.balance - amount,
+      },
+      destination: {
+        id: createdDestinationAccount.accountId,
+        balance: createdDestinationAccount.balance + amount,
+      },
+    })
+
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(originAccountId)
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(destinationAccountId)
+    expect(mockAccountsRepository.create).toHaveBeenCalledWith({
+      destination: destinationAccountId,
+      amount: 0,
+    })
+    expect(mockAccountsRepository.save).toHaveBeenCalledTimes(2)
   })
 
-  it('should throw AccountBalanceLessThanTransferAmountError if origin account balance is less than the transfer amount', async () => {
+  it('should throw AccountNotFoundError if origin account does not exist', async () => {
+    const originAccountId = 'non-existent-account-id'
+    const destinationAccountId = 'destination-account-id'
+    const amount = 50
+
+    mockAccountsRepository.findByAccountId.mockResolvedValueOnce(null)
+
+    await expect(
+      transferUseCase.execute({
+        origin: originAccountId,
+        amount,
+        destination: destinationAccountId,
+      })
+    ).rejects.toThrow(AccountNotFoundError)
+
+    expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(originAccountId)
+    expect(mockAccountsRepository.findByAccountId).not.toHaveBeenCalledWith(destinationAccountId)
+    expect(mockAccountsRepository.create).not.toHaveBeenCalled()
+    expect(mockAccountsRepository.save).not.toHaveBeenCalled()
+  })
+
+  it('should throw AccountBalanceLessThanTransferAmountError if origin account balance is less than transfer amount', async () => {
     const originAccountId = 'origin-account-id'
     const destinationAccountId = 'destination-account-id'
     const amount = 150
-    const originAccount = { id: originAccountId, accountId: originAccountId, balance: 100 }
-    const destinationAccount = { id: destinationAccountId, accountId: destinationAccountId, balance: 50 }
+    const originAccount = { id: '1', accountId: originAccountId, balance: 100 }
 
-    mockAccountsRepository.findByAccountId
-      .mockResolvedValueOnce(originAccount)
-      .mockResolvedValueOnce(destinationAccount)
+    mockAccountsRepository.findByAccountId.mockResolvedValueOnce(originAccount).mockResolvedValueOnce(null)
 
     await expect(
-      transferUseCase.execute({ origin: originAccountId, amount, destination: destinationAccountId })
+      transferUseCase.execute({
+        origin: originAccountId,
+        amount,
+        destination: destinationAccountId,
+      })
     ).rejects.toThrow(AccountBalanceLessThanTransferAmountError)
+
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(originAccountId)
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(destinationAccountId)
+    expect(mockAccountsRepository.create).toHaveBeenCalled()
+    expect(mockAccountsRepository.save).not.toHaveBeenCalled()
   })
 })
