@@ -45,6 +45,7 @@ describe('Event (e2e)', () => {
       origin: {
         id: '101',
         balance: 100,
+        credit: 1000,
       },
     })
   })
@@ -60,17 +61,40 @@ describe('Event (e2e)', () => {
     expect(response.body).toEqual(0)
   })
 
-  it('should not be able to withdraw if the balance is insufficient', async () => {
+  it('should be able to withdraw using credit if the balance is insufficient but within credit limit', async () => {
     await request(app.server).post('/event').send({
       type: 'deposit',
       destination: '102',
-      amount: 50,
+      amount: 500,
     })
 
     const response = await request(app.server).post('/event').send({
       type: 'withdraw',
       origin: '102',
-      amount: 100,
+      amount: 1200,
+    })
+
+    expect(response.status).toEqual(201)
+    expect(response.body).toEqual({
+      origin: {
+        id: '102',
+        balance: 0,
+        credit: 300,
+      },
+    })
+  })
+
+  it('should not be able to withdraw if the amount exceeds balance and credit limit', async () => {
+    await request(app.server).post('/event').send({
+      type: 'deposit',
+      destination: '103',
+      amount: 200,
+    })
+
+    const response = await request(app.server).post('/event').send({
+      type: 'withdraw',
+      origin: '103',
+      amount: 1300,
     })
 
     expect(response.status).toEqual(409)
@@ -82,31 +106,31 @@ describe('Event (e2e)', () => {
   it('should be able to transfer between two accounts', async () => {
     await request(app.server).post('/event').send({
       type: 'deposit',
-      destination: '103',
+      destination: '104',
       amount: 200,
     })
 
     await request(app.server).post('/event').send({
       type: 'deposit',
-      destination: '104',
+      destination: '105',
       amount: 100,
     })
 
     const response = await request(app.server).post('/event').send({
       type: 'transfer',
-      origin: '103',
-      destination: '104',
+      origin: '104',
+      destination: '105',
       amount: 100,
     })
 
     expect(response.status).toEqual(201)
     expect(response.body).toEqual({
       origin: {
-        id: '103',
+        id: '104',
         balance: 100,
       },
       destination: {
-        id: '104',
+        id: '105',
         balance: 200,
       },
     })
@@ -116,7 +140,7 @@ describe('Event (e2e)', () => {
     const response = await request(app.server).post('/event').send({
       type: 'transfer',
       origin: 'non-existent-origin',
-      destination: '104',
+      destination: '106',
       amount: 50,
     })
 
@@ -127,13 +151,13 @@ describe('Event (e2e)', () => {
   it('should be able to transfer if the destination account does not exist', async () => {
     await request(app.server).post('/event').send({
       type: 'deposit',
-      destination: '105',
+      destination: '107',
       amount: 100,
     })
 
     const response = await request(app.server).post('/event').send({
       type: 'transfer',
-      origin: '105',
+      origin: '107',
       destination: 'new-destination-id',
       amount: 50,
     })
@@ -141,7 +165,7 @@ describe('Event (e2e)', () => {
     expect(response.status).toEqual(201)
     expect(response.body).toEqual({
       origin: {
-        id: '105',
+        id: '107',
         balance: 50,
       },
       destination: {
@@ -154,20 +178,20 @@ describe('Event (e2e)', () => {
   it('should not be able to transfer if the origin account balance is insufficient', async () => {
     await request(app.server).post('/event').send({
       type: 'deposit',
-      destination: '106',
+      destination: '108',
       amount: 50,
     })
 
     await request(app.server).post('/event').send({
       type: 'deposit',
-      destination: '107',
+      destination: '109',
       amount: 100,
     })
 
     const response = await request(app.server).post('/event').send({
       type: 'transfer',
-      origin: '106',
-      destination: '107',
+      origin: '108',
+      destination: '109',
       amount: 100,
     })
 
