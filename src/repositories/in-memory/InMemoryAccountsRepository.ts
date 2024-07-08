@@ -11,6 +11,7 @@ export class InMemoryAccountsRepository implements AccountsRepository {
       id: uuidV7(),
       accountId: destination,
       balance: amount,
+      credit: 1000,
     }
 
     accounts.push(data)

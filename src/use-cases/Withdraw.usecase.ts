@@ -12,6 +12,7 @@ type WithdrawUseCaseResponse = {
   origin: {
     id: string
     balance: number
+    credit: number
   }
 }
 
@@ -30,11 +31,19 @@ export class WithdrawUseCase {
       throw new AccountNotFoundError()
     }
 
-    if (account.balance < amount) {
+    const totalAvailableFunds = account.balance + account.credit
+
+    if (totalAvailableFunds < amount) {
       throw new AccountBalanceLessThanWithdrawAmountError()
     }
 
-    const balance = account.balance - amount
+    let newBalance = account.balance - amount
+    let newCredit = account.credit
+
+    if (newBalance < 0) {
+      newCredit += newBalance // newBalance is negative, so this subtracts from credit
+      newBalance = 0
+    }
 
     await this.transactionsRepository.create({
       type: 'withdraw',
@@ -43,12 +52,13 @@ export class WithdrawUseCase {
       destination: accountId,
     })
 
-    await this.accountsRepository.save(account.id, { ...account, balance })
+    await this.accountsRepository.save(account.id, { ...account, balance: newBalance, credit: newCredit })
 
     return {
       origin: {
         id: accountId,
-        balance,
+        balance: newBalance,
+        credit: newCredit,
       },
     }
   }
