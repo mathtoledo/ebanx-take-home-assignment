@@ -27,7 +27,7 @@ describe('WithdrawUseCase', () => {
   it('should successfully withdraw from an existing account with sufficient balance', async () => {
     const accountId = 'existing-account-id'
     const amount = 50
-    const existingAccount = { id: accountId, accountId, balance: 100 }
+    const existingAccount = { id: accountId, accountId, balance: 100, credit: 1000 }
 
     mockAccountsRepository.findByAccountId.mockResolvedValue(existingAccount)
     mockTransactionsRepository.create.mockResolvedValue({})
@@ -35,6 +35,7 @@ describe('WithdrawUseCase', () => {
       id: accountId,
       accountId,
       balance: 50,
+      credit: 1000,
     })
 
     const response = await withdrawUseCase.execute({ origin: accountId, amount })
@@ -43,6 +44,7 @@ describe('WithdrawUseCase', () => {
       origin: {
         id: accountId,
         balance: 50,
+        credit: 1000,
       },
     })
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(accountId)
@@ -68,10 +70,47 @@ describe('WithdrawUseCase', () => {
     expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(accountId)
   })
 
-  it('should throw AccountBalanceLessThanWithdrawAmountError if balance is less than the withdrawal amount', async () => {
+  it('should successfully withdraw from an existing account with insufficient balance but within credit limit', async () => {
     const accountId = 'existing-account-id'
-    const amount = 150
-    const existingAccount = { id: accountId, accountId, balance: 100 }
+    const amount = 1200
+    const existingAccount = { id: accountId, accountId, balance: 500, credit: 1000 }
+
+    mockAccountsRepository.findByAccountId.mockResolvedValue(existingAccount)
+    mockTransactionsRepository.create.mockResolvedValue({})
+    mockAccountsRepository.save.mockResolvedValue({
+      id: accountId,
+      accountId,
+      balance: 0,
+      credit: 300,
+    })
+
+    const response = await withdrawUseCase.execute({ origin: accountId, amount })
+
+    expect(response).toEqual({
+      origin: {
+        id: accountId,
+        balance: 0,
+        credit: 300,
+      },
+    })
+    expect(mockAccountsRepository.findByAccountId).toHaveBeenCalledWith(accountId)
+    expect(mockTransactionsRepository.create).toHaveBeenCalledWith({
+      type: 'withdraw',
+      amount,
+      origin: null,
+      destination: accountId,
+    })
+    expect(mockAccountsRepository.save).toHaveBeenCalledWith(existingAccount.id, {
+      ...existingAccount,
+      balance: 0,
+      credit: 300,
+    })
+  })
+
+  it('should throw AccountBalanceLessThanWithdrawAmountError if balance and credit are less than the withdrawal amount', async () => {
+    const accountId = 'existing-account-id'
+    const amount = 1300
+    const existingAccount = { id: accountId, accountId, balance: 200, credit: 1000 }
 
     mockAccountsRepository.findByAccountId.mockResolvedValue(existingAccount)
 
